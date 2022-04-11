@@ -129,4 +129,4 @@ dmypy.json
 .pyre/
 
 # Config file for email and credentials
-email_cfg.txt
+config.yaml

